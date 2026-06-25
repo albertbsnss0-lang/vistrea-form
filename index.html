@@ -256,19 +256,76 @@ a.info-text:hover {
 </style>
 
 <script>
+// --- Funcții de validare ---
+
+// Nume: cel puțin 2 caractere și să conțină litere (acceptă diacritice, spații, cratime, apostrofuri)
+function isValidName(value) {
+  const name = value.trim();
+  if (name.length < 2) return false;
+  return /[a-zA-ZÀ-ÿĀ-ɏ]/.test(name);
+}
+
+// Email: validare permisivă a formatului (câmpul este opțional)
+function isValidEmail(value) {
+  const email = value.trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Telefon: acceptă toate formatele românești uzuale:
+// 0761 900 350, 0761900350, +40 761 900 350, +40761900350, 0040761900350,
+// fixe (021..., 0256...), cu sau fără spații / puncte / cratime / paranteze.
+function isValidPhone(value) {
+  let digits = value.replace(/\D/g, '');
+  if (digits.startsWith('0040')) {
+    digits = digits.slice(4);
+  } else if (digits.startsWith('40') && digits.length >= 11) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 10 && digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+  // Numărul național semnificativ are 9 cifre și nu începe cu 0.
+  return /^[1-9]\d{8}$/.test(digits);
+}
+
 document.getElementById('n8n-lead-form').addEventListener('submit', function(e) {
   e.preventDefault();
-  
+
   const submitBtn = document.getElementById('submit-btn');
   const responseMessage = document.getElementById('form-response-message');
-  
+
+  const nameField = document.getElementById('name');
+  const emailField = document.getElementById('email');
+  const phoneField = document.getElementById('phone');
+
+  // Validare înainte de trimitere
+  function showError(message, field) {
+    responseMessage.className = 'response-message error';
+    responseMessage.innerText = message;
+    if (field) field.focus();
+  }
+
+  if (!isValidName(nameField.value)) {
+    showError('Vă rugăm să introduceți un nume valid.', nameField);
+    return;
+  }
+  if (emailField.value.trim() !== '' && !isValidEmail(emailField.value)) {
+    showError('Vă rugăm să introduceți o adresă de email validă.', emailField);
+    return;
+  }
+  if (!isValidPhone(phoneField.value)) {
+    showError('Vă rugăm să introduceți un număr de telefon valid.', phoneField);
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.innerText = 'Se trimite...';
-  
+  responseMessage.className = 'response-message';
+
   const formData = {
-    name: document.getElementById('name').value,
-    email: document.getElementById('email').value,
-    phone: document.getElementById('phone').value,
+    name: nameField.value.trim(),
+    email: emailField.value.trim(),
+    phone: phoneField.value.trim(),
     message: document.getElementById('message').value,
     source_url: window.location.href,
     timestamp: new Date().toISOString()
