@@ -348,4 +348,23 @@ document.getElementById('n8n-lead-form').addEventListener('submit', function(e) 
     submitBtn.innerText = 'Trimite';
   });
 });
+
+// Trimite înălțimea reală a formularului către pagina părinte (iframe),
+// pentru ca pe mobil formularul să nu fie tăiat.
+(function() {
+  function sendHeight() {
+    var h = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight
+    );
+    parent.postMessage({ vistreaFormHeight: h }, '*');
+  }
+  window.addEventListener('load', sendHeight);
+  window.addEventListener('resize', sendHeight);
+  if (window.ResizeObserver) {
+    new ResizeObserver(sendHeight).observe(document.body);
+  }
+})();
 </script>
